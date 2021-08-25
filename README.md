@@ -70,3 +70,27 @@ vsTCanny (clip, float "sigmaY", float "sigmaU", float "sigmaV", float sigma_vY",
     Default: -1.
 
 [1]: Zhou, P., Ye, W., & Wang, Q. (2011). An Improved Canny Algorithm for Edge Detection. Journal of Computational Information Systems, 7(5), 1516-1523.
+
+# Building
+
+## Windows
+
+Use solution files.
+
+## Linux
+
+### Requirements
+
+- Git
+- C++17 compiler
+- CMake >= 3.16
+
+```
+git clone https://github.com/Asd-g/AviSynth-vsTCanny && \
+cd AviSynth-vsTCanny && \
+mkdir build && \
+cd build && \
+cmake .. && \
+make -j$(nproc) && \
+sudo make install
+```
