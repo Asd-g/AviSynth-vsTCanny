@@ -44,7 +44,7 @@ vsTCanny (clip, float "sigmaY", float "sigmaU", float "sigmaV", float sigma_vY",
 - op\
     Sets the operator for edge detection.\
     0: The operator used in tritical's original filter.\
-    1: The operator proposed by P. Zhou et al.\
+    1:  the Prewitt operator whose use is proposed by P. Zhou et al. [1]
     2: The Sobel operator.\
     3: The Scharr operator.\
     Default: 1.
@@ -68,3 +68,5 @@ vsTCanny (clip, float "sigmaY", float "sigmaU", float "sigmaV", float sigma_vY",
     1: Use SSE2 code.\
     2: Use AVX2 code.\
     Default: -1.
+
+[1]: Zhou, P., Ye, W., & Wang, Q. (2011). An Improved Canny Algorithm for Edge Detection. Journal of Computational Information Systems, 7(5), 1516-1523.

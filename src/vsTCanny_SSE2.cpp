@@ -10,9 +10,9 @@ static void copyPlane(const T* srcp, float* dstp, const int width, const int hei
     {
         for (int x = 0; x < width; x += 4)
         {
-            if (std::is_same<T, uint8_t>::value)
+            if constexpr (std::is_same_v<T, uint8_t>)
                 to_float(Vec4i().load_4uc(srcp + x)).store_nt(dstp + x);
-            else if (std::is_same<T, uint16_t>::value)
+            else if constexpr (std::is_same_v<T, uint16_t>)
                 to_float(Vec4i().load_4us(srcp + x)).store_nt(dstp + x);
             else
                 (Vec4f().load_a(reinterpret_cast<const float*>(srcp + x)) + offset).store_nt(dstp + x);
@@ -47,12 +47,12 @@ static void gaussianBlur(const T* __srcp, float* temp, float* dstp, const float*
 
             for (int i = 0; i < diameter; ++i)
             {
-                if (std::is_same<T, uint8_t>::value)
+                if constexpr (std::is_same_v<T, uint8_t>)
                 {
                     const Vec4f srcp = to_float(Vec4i().load_4uc(_srcp[i] + x));
                     sum = mul_add(srcp, weightsV[i], sum);
                 }
-                else if (std::is_same<T, uint16_t>::value)
+                else if constexpr (std::is_same_v<T, uint16_t>)
                 {
                     const Vec4f srcp = to_float(Vec4i().load_4us(_srcp[i] + x));
                     sum = mul_add(srcp, weightsV[i], sum);
@@ -120,12 +120,12 @@ static void gaussianBlurV(const T* __srcp, float* dstp, const float* weights, co
 
             for (int i = 0; i < diameter; ++i)
             {
-                if (std::is_same<T, uint8_t>::value)
+                if constexpr (std::is_same_v<T, uint8_t>)
                 {
                     const Vec4f srcp = to_float(Vec4i().load_4uc(_srcp[i] + x));
                     sum = mul_add(srcp, weights[i], sum);
                 }
-                else if (std::is_same<T, uint16_t>::value)
+                else if constexpr (std::is_same_v<T, uint16_t>)
                 {
                     const Vec4f srcp = to_float(Vec4i().load_4us(_srcp[i] + x));
                     sum = mul_add(srcp, weights[i], sum);
@@ -162,9 +162,9 @@ static void gaussianBlurH(const T* _srcp, float* temp, float* dstp, const float*
     {
         for (int x = 0; x < width; x += 4)
         {
-            if (std::is_same<T, uint8_t>::value)
+            if constexpr (std::is_same_v<T, uint8_t>)
                 to_float(Vec4i().load_4uc(_srcp + x)).store_a(temp + x);
-            else if (std::is_same<T, uint16_t>::value)
+            else if constexpr (std::is_same_v<T, uint16_t>)
                 to_float(Vec4i().load_4us(_srcp + x)).store_a(temp + x);
             else
                 (Vec4f().load_a(reinterpret_cast<const float*>(_srcp + x)) + offset).store_a(temp + x);
@@ -495,9 +495,8 @@ void discretizeGM(const float* _srcp, float* dstp, const int width, const int he
 template<typename T>
 void vsTCanny::filter_sse2(PVideoFrame& src, PVideoFrame& dst, const vsTCanny* const __restrict, IScriptEnvironment* env) noexcept
 {
-    const int comp_size = vi.ComponentSize();
-    int planes_y[4] = { PLANAR_Y, PLANAR_U, PLANAR_V, PLANAR_A };
-    int planes_r[4] = { PLANAR_G, PLANAR_B, PLANAR_R, PLANAR_A };
+    int planes_y[3] = { PLANAR_Y, PLANAR_U, PLANAR_V };
+    int planes_r[3] = { PLANAR_G, PLANAR_B, PLANAR_R };
     const int* current_planes = vi.IsRGB() ? planes_r : planes_y;
     for (int i = 0; i < planecount; ++i)
     {
@@ -506,10 +505,10 @@ void vsTCanny::filter_sse2(PVideoFrame& src, PVideoFrame& dst, const vsTCanny* c
 
         if (process[i] == 3)
         {
-            const int stride = src->GetPitch(plane) / comp_size;
+            const int stride = src->GetPitch(plane) / sizeof(T);
             const int bgStride = stride + radiusAlign * 2;
-            const int dst_stride = dst->GetPitch(plane) / comp_size;
-            const int width = src->GetRowSize(plane) / comp_size;
+            const int dst_stride = dst->GetPitch(plane) / sizeof(T);
+            const int width = src->GetRowSize(plane) / sizeof(T);
             const T* srcp = reinterpret_cast<const T*>(src->GetReadPtr(plane));
             T* dstp = reinterpret_cast<T*>(dst->GetWritePtr(plane));
 

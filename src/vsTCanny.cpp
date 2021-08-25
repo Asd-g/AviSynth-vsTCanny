@@ -3,6 +3,31 @@
 
 #include "vsTCanny.h"
 
+AVS_FORCEINLINE void* aligned_malloc(size_t size, size_t align)
+{
+    void* result = [&]() {
+#ifdef _MSC_VER 
+        return _aligned_malloc(size, align);
+#else 
+        if (posix_memalign(&result, align, size))
+            return result = nullptr;
+        else
+            return result;
+#endif
+    }();
+
+    return result;
+}
+
+AVS_FORCEINLINE void aligned_free(void* ptr)
+{
+#ifdef _MSC_VER 
+    _aligned_free(ptr);
+#else 
+    free(ptr);
+#endif
+}
+
 template<typename T>
 static void copyPlane(const T* srcp, float* __restrict dstp, const int width, const int height, const int srcStride, const int dstStride, const float offset) noexcept
 {
@@ -10,7 +35,7 @@ static void copyPlane(const T* srcp, float* __restrict dstp, const int width, co
     {
         for (int x = 0; x < width; ++x)
         {
-            if (std::is_integral<T>::value)
+            if constexpr (std::is_integral_v<T>)
                 dstp[x] = srcp[x];
             else
                 dstp[x] = srcp[x] + offset;
@@ -44,7 +69,7 @@ static void gaussianBlur(const T* _srcp, float* __restrict temp, float* __restri
 
             for (int i = 0; i < diameter; ++i)
             {
-                if (std::is_integral<T>::value)
+                if constexpr (std::is_integral_v<T>)
                     sum += srcp[i][x] * weightsV[i];
                 else
                     sum += (srcp[i][x] + offset) * weightsV[i];
@@ -102,7 +127,7 @@ static void gaussianBlurV(const T* _srcp, float* __restrict dstp, const float* w
 
             for (int i = 0; i < diameter; ++i)
             {
-                if (std::is_integral<T>::value)
+                if constexpr (std::is_integral_v<T>)
                     sum += srcp[i][x] * weights[i];
                 else
                     sum += (srcp[i][x] + offset) * weights[i];
@@ -132,7 +157,7 @@ static void gaussianBlurH(const T* srcp, float* __restrict temp, float* __restri
     {
         for (int x = 0; x < width; ++x)
         {
-            if (std::is_integral<T>::value)
+            if constexpr (std::is_integral_v<T>)
                 temp[x] = srcp[x];
             else
                 temp[x] = srcp[x] + offset;
@@ -251,7 +276,7 @@ static void outputGB(const float* srcp, T* __restrict dstp, const int width, con
     {
         for (int x = 0; x < width; ++x)
         {
-            if (std::is_integral<T>::value)
+            if constexpr (std::is_integral_v<T>)
                 dstp[x] = static_cast<T>(std::min(static_cast<unsigned>(lrintf(srcp[x])), static_cast<unsigned>(peak)));
             else
                 dstp[x] = srcp[x] - offset;
@@ -269,7 +294,7 @@ static void binarizeCE(const float* srcp, T* __restrict dstp, const int width, c
     {
         for (int x = 0; x < width; ++x)
         {
-            if (std::is_integral<T>::value)
+            if constexpr (std::is_integral_v<T>)
                 dstp[x] = static_cast<T>((srcp[x] == fltMax) ? peak : 0);
             else
                 dstp[x] = (srcp[x] == fltMax) ? upper : lower;
@@ -287,7 +312,7 @@ static void discretizeGM(const float* srcp, T* __restrict dstp, const int width,
     {
         for (int x = 0; x < width; ++x)
         {
-            if (std::is_integral<T>::value)
+            if constexpr (std::is_integral_v<T>)
                 dstp[x] = static_cast<T>(std::min(static_cast<unsigned>(lrintf(srcp[x] * magnitude)), static_cast<unsigned>(peak)));
             else
                 dstp[x] = srcp[x] * magnitude - offset;
@@ -301,9 +326,8 @@ static void discretizeGM(const float* srcp, T* __restrict dstp, const int width,
 template<typename T>
 void vsTCanny::filter_c(PVideoFrame& src, PVideoFrame& dst, const vsTCanny* const __restrict, IScriptEnvironment* env) noexcept
 {
-    const int comp_size = vi.ComponentSize();
-    int planes_y[4] = { PLANAR_Y, PLANAR_U, PLANAR_V, PLANAR_A };
-    int planes_r[4] = { PLANAR_G, PLANAR_B, PLANAR_R, PLANAR_A };
+    int planes_y[3] = { PLANAR_Y, PLANAR_U, PLANAR_V };
+    int planes_r[3] = { PLANAR_G, PLANAR_B, PLANAR_R };
     const int* current_planes = vi.IsRGB() ? planes_r : planes_y;
     for (int i = 0; i < planecount; ++i)
     {
@@ -312,10 +336,10 @@ void vsTCanny::filter_c(PVideoFrame& src, PVideoFrame& dst, const vsTCanny* cons
 
         if (process[i] == 3)
         {
-            const int stride = src->GetPitch(plane) / comp_size;
+            const int stride = src->GetPitch(plane) / sizeof(T);
             const int bgStride = stride + radiusAlign * 2;
-            const int dst_stride = dst->GetPitch(plane) / comp_size;
-            const int width = src->GetRowSize(plane) / comp_size;
+            const int dst_stride = dst->GetPitch(plane) / sizeof(T);
+            const int width = src->GetRowSize(plane) / sizeof(T);
             const T* srcp = reinterpret_cast<const T*>(src->GetReadPtr(plane));
             T* dstp = reinterpret_cast<T*>(dst->GetWritePtr(plane));
 
@@ -404,8 +428,11 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
     if (!(env->GetCPUFlags() & CPUF_SSE2) && opt_ == 1)
         env->ThrowError("vsTCanny: opt=1 requires SSE2.");
 
-    float sigmaH[3] = { sigmaY, sigmaU, sigmaV };
-    float sigmaV_[3] = { sigma_vY, sigma_vU, sigma_vV };
+    const float sigmaH[3] = { sigmaY, sigmaU, sigmaV };
+    const float sigmaV_[3] = { sigma_vY, sigma_vU, sigma_vV };
+    const std::string planeOrder[3] = { "first", "second", "third" };
+    const std::string sigmaOrder[3] = { "sigmaY", "sigmaU", "sigmaV" };
+    const std::string sigmaVOrder[3] = { "sigma_vY", "sigma_vU", "sigma_vV" };
 
     const int planes[3] = { y, u, v };
     planecount = std::min(vi.NumComponents(), 3);
@@ -424,9 +451,9 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
         }
 
         if (sigmaH[i] < 0.f)
-            env->ThrowError("vsTCanny: sigma must be greater than or equal to 0.0.");
+            env->ThrowError(std::string("vsTCanny: " + sigmaOrder[i] + " must be greater than or equal to 0.0.").c_str());
         if (sigmaV_[i] < 0.f)
-            env->ThrowError("vsTCanny: sigma_v must be greater than or equal to 0.0.");
+            env->ThrowError(std::string("vsTCanny: " + sigmaVOrder[i] + " must be greater than or equal to 0.0.").c_str());
         if (planes[i] < 1 || planes[i] > 3)
             env->ThrowError("vsTCanny: y, u, v must be between 1..3.");
 
@@ -452,10 +479,9 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
                     env->ThrowError("vsTCanny: malloc failure (weightsH).");
 
                 const int width = vi.width >> ((i && !vi.IsRGB()) ? vi.GetPlaneWidthSubsampling(PLANAR_U) : 0);
-                const std::string planeOrder{ i == 0 ? "first" : (i == 1 ? "second" : "third") };
-                const std::string message("vsTCanny: the " + planeOrder + " plane's width must be greater than or equal to " + std::to_string(radiusH[i] + 1) + " for specified sigma.");
+                
                 if (width < radiusH[i] + 1)
-                    env->ThrowError(message.c_str());
+                    env->ThrowError(std::string("vsTCanny: the " + planeOrder[i] + " plane's width must be greater than or equal to " + std::to_string(radiusH[i] + 1) + " for specified sigma.").c_str());
             }
 
             if (sigmaV_[i])
@@ -465,10 +491,9 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
                     env->ThrowError("vsTCanny: malloc failure (weightsV).");
 
                 const int height_ = height >> ((i && !vi.IsRGB()) ? vi.GetPlaneHeightSubsampling(PLANAR_U) : 0);
-                const std::string planeOrder{ i == 0 ? "first" : (i == 1 ? "second" : "third") };
-                const std::string message("vsTCanny: the " + planeOrder + " plane's height must be greater than or equal to " + std::to_string(radiusV[i] + 1) + " for specified sigma_v.");
+
                 if (height_ < radiusV[i] + 1)
-                    env->ThrowError(message.c_str());
+                    env->ThrowError(std::string("vsTCanny: the " + planeOrder[i] + " plane's height must be greater than or equal to " + std::to_string(radiusV[i] + 1) + " for specified sigma_v.").c_str());
             }
         }
     }
@@ -514,17 +539,17 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
     PVideoFrame clip = child->GetFrame(0, env);
     const int pitch = clip->GetPitch(PLANAR_Y);
 
-    blur = reinterpret_cast<float*>(_aligned_malloc((pitch / comp_size + radiusAlign * static_cast<int64_t>(2)) * height * sizeof(float), alignment));
+    blur = reinterpret_cast<float*>(aligned_malloc((pitch / comp_size + radiusAlign * static_cast<int64_t>(2)) * height * sizeof(float), alignment));
     if (!blur)
         env->ThrowError("vsTCanny: malloc failure (blur).");
 
-    gradient = reinterpret_cast<float*>(_aligned_malloc((pitch / comp_size + radiusAlign * static_cast<int64_t>(2)) * (height + static_cast<int64_t>(2)) * sizeof(float), alignment));
+    gradient = reinterpret_cast<float*>(aligned_malloc((pitch / comp_size + radiusAlign * static_cast<int64_t>(2)) * (height + static_cast<int64_t>(2)) * sizeof(float), alignment));
     if (!gradient)
         env->ThrowError("vsTCanny: malloc failure (gradient).");
 
     if (mode_ == 0)
     {
-        direction = reinterpret_cast<unsigned*>(_aligned_malloc(pitch / comp_size * static_cast<int64_t>(height) * sizeof(unsigned), alignment));
+        direction = reinterpret_cast<unsigned*>(aligned_malloc(pitch / comp_size * static_cast<int64_t>(height) * sizeof(unsigned), alignment));
         if (!direction)
             env->ThrowError("vsTCanny: malloc failure (direction).");
 
@@ -554,9 +579,9 @@ vsTCanny::~vsTCanny()
         }
     }
 
-    _aligned_free(blur);
-    _aligned_free(gradient);
-    _aligned_free(direction);
+    aligned_free(blur);
+    aligned_free(gradient);
+    aligned_free(direction);
     delete[] found;
 }
 
@@ -600,16 +625,22 @@ AVSValue __cdecl Create_vsTCanny(AVSValue args, void* user_data, IScriptEnvironm
 {
     PClip clip = args[0].AsClip();
     const VideoInfo& vi = clip->GetVideoInfo();
-    const float sigmaY = args[1].AsFloatf(1.5);
-    const float sigma_vY = args[4].AsFloatf(1.5);
-    float sigmaU = 0.f;
-    float sigma_vU = 0.f;
+    const float sigmaY = args[1].AsFloatf(1.5f);
+    const float sigma_vY = args[4].AsFloatf(1.5f);
 
-    if (vi.NumComponents() > 1 && !vi.IsRGB())
-    {
-        sigmaU = args[2].AsFloatf(sigmaY / (1 << vi.GetPlaneWidthSubsampling(PLANAR_U)));
-        sigma_vU = args[5].AsFloatf(sigma_vY / (1 << vi.GetPlaneHeightSubsampling(PLANAR_U)));
-    }
+    const float sigmaU = [&]() {
+        if (vi.NumComponents() > 1)
+            return (vi.IsRGB() || vi.Is444()) ? args[2].AsFloatf(sigmaY) : args[2].AsFloatf(sigmaY / (1 << vi.GetPlaneWidthSubsampling(PLANAR_U)));
+        else
+            return 0.0f;
+    }();
+
+    const float sigma_vU = [&]() {
+        if (vi.NumComponents() > 1)
+            return (vi.IsRGB() || vi.Is444()) ? args[5].AsFloatf(sigma_vY) : args[5].AsFloatf(sigma_vY / (1 << vi.GetPlaneHeightSubsampling(PLANAR_U)));
+        else
+            return 0.0f;
+    }();
 
     return new vsTCanny(
         clip,
