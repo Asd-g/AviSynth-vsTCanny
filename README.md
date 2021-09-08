@@ -1,16 +1,22 @@
-# Description
+## Description
 
 Builds an edge map using canny edge detection.
 
 This is [a port of the VapourSynth plugin TCanny](https://github.com/HomeOfVapourSynthEvolution/VapourSynth-TCanny).
 
-# Usage
+### Requirements:
+
+- AviSynth 2.60 / AviSynth+ 3.4 or later
+
+- Microsoft VisualC++ Redistributable Package 2022 (can be downloaded from [here](https://github.com/abbodi1406/vcredist/releases)) (Windows only)
+
+### Usage:
 
 ```
 vsTCanny (clip, float "sigmaY", float "sigmaU", float "sigmaV", float sigma_vY", float "sigma_vU", float "sigma_vV", float "t_h", float "t_l", int "mode", int "op", float "gmmax", int "y", int "u", int "v", int "opt")
 ```
 
-## Parameters:
+### Parameters:
 
 - clip\
     A clip to process. All planar formats are supported.
@@ -71,26 +77,24 @@ vsTCanny (clip, float "sigmaY", float "sigmaU", float "sigmaV", float sigma_vY",
 
 [1]: Zhou, P., Ye, W., & Wang, Q. (2011). An Improved Canny Algorithm for Edge Detection. Journal of Computational Information Systems, 7(5), 1516-1523.
 
-# Building
+### Building:
 
-## Windows
+- Windows\
+    Use solution files.
 
-Use solution files.
-
-## Linux
-
-### Requirements
-
-- Git
-- C++17 compiler
-- CMake >= 3.16
-
-```
-git clone https://github.com/Asd-g/AviSynth-vsTCanny && \
-cd AviSynth-vsTCanny && \
-mkdir build && \
-cd build && \
-cmake .. && \
-make -j$(nproc) && \
-sudo make install
-```
+- Linux
+    ```
+    Requirements:
+        - Git
+        - C++17 compiler
+        - CMake >= 3.16
+    ```
+    ```
+    git clone https://github.com/Asd-g/AviSynth-vsTCanny && \
+    cd AviSynth-vsTCanny && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    make -j$(nproc) && \
+    sudo make install
+    ```
