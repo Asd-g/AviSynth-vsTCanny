@@ -537,7 +537,7 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
     magnitude = 255.f / gmmax;
 
     PVideoFrame clip = child->GetFrame(0, env);
-    const int pitch = clip->GetPitch(PLANAR_Y);
+    const int pitch = clip->GetPitch();
 
     blur = reinterpret_cast<float*>(aligned_malloc((pitch / comp_size + radiusAlign * static_cast<int64_t>(2)) * height * sizeof(float), alignment));
     if (!blur)
