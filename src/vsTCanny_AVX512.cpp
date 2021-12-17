@@ -6,14 +6,14 @@ static void copyPlane(const T* srcp, float* dstp, const int width, const int hei
 {
     for (int y{ 0 }; y < height; ++y)
     {
-        for (int x{ 0 }; x < width; x += 4)
+        for (int x{ 0 }; x < width; x += 16)
         {
             if constexpr (std::is_same_v<T, uint8_t>)
-                to_float(Vec4i().load_4uc(srcp + x)).store_nt(dstp + x);
+                to_float(Vec16i().load_16uc(srcp + x)).store_nt(dstp + x);
             else if constexpr (std::is_same_v<T, uint16_t>)
-                to_float(Vec4i().load_4us(srcp + x)).store_nt(dstp + x);
+                to_float(Vec16i().load_16us(srcp + x)).store_nt(dstp + x);
             else
-                Vec4f().load_a(srcp + x).store_nt(dstp + x);
+                Vec16f().load_a(srcp + x).store_nt(dstp + x);
         }
 
         srcp += srcStride;
@@ -35,25 +35,25 @@ static void gaussianBlur(const T* __srcp, float* temp, float* dstp, const float*
 
     for (int y{ 0 }; y < height; ++y)
     {
-        for (int x{ 0 }; x < width; x += 4)
+        for (int x{ 0 }; x < width; x += 16)
         {
-            Vec4f sum{ zero_4f() };
+            Vec16f sum{ zero_16f() };
 
             for (int i{ 0 }; i < diameter; ++i)
             {
                 if constexpr (std::is_same_v<T, uint8_t>)
                 {
-                    const Vec4f srcp{ to_float(Vec4i().load_4uc(_srcp[i] + x)) };
+                    const Vec16f srcp{ to_float(Vec16i().load_16uc(_srcp[i] + x)) };
                     sum = mul_add(srcp, weightsV[i], sum);
                 }
                 else if constexpr (std::is_same_v<T, uint16_t>)
                 {
-                    const Vec4f srcp{ to_float(Vec4i().load_4us(_srcp[i] + x)) };
+                    const Vec16f srcp{ to_float(Vec16i().load_16us(_srcp[i] + x)) };
                     sum = mul_add(srcp, weightsV[i], sum);
                 }
                 else
                 {
-                    const Vec4f srcp{ Vec4f().load_a(_srcp[i] + x) };
+                    const Vec16f srcp{ Vec16f().load_a(_srcp[i] + x) };
                     sum = mul_add(srcp, weightsV[i], sum);
                 }
             }
@@ -67,13 +67,13 @@ static void gaussianBlur(const T* __srcp, float* temp, float* dstp, const float*
             temp[width - 1 + i] = temp[width - 1 - i];
         }
 
-        for (int x{ 0 }; x < width; x += 4)
+        for (int x{ 0 }; x < width; x += 16)
         {
-            Vec4f sum{ zero_4f() };
+            Vec16f sum{ zero_16f() };
 
             for (int i{ -radiusH }; i <= radiusH; ++i)
             {
-                const Vec4f srcp{ Vec4f().load(temp + x + i) };
+                const Vec16f srcp{ Vec16f().load(temp + x + i) };
                 sum = mul_add(srcp, weightsH[i], sum);
             }
 
@@ -101,25 +101,25 @@ static void gaussianBlurV(const T* __srcp, float* dstp, const float* weights, co
 
     for (int y{ 0 }; y < height; ++y)
     {
-        for (int x{ 0 }; x < width; x += 4)
+        for (int x{ 0 }; x < width; x += 16)
         {
-            Vec4f sum{ zero_4f() };
+            Vec16f sum{ zero_16f() };
 
             for (int i{ 0 }; i < diameter; ++i)
             {
                 if constexpr (std::is_same_v<T, uint8_t>)
                 {
-                    const Vec4f srcp{ to_float(Vec4i().load_4uc(_srcp[i] + x)) };
+                    const Vec16f srcp{ to_float(Vec16i().load_16uc(_srcp[i] + x)) };
                     sum = mul_add(srcp, weights[i], sum);
                 }
                 else if constexpr (std::is_same_v<T, uint16_t>)
                 {
-                    const Vec4f srcp{ to_float(Vec4i().load_4us(_srcp[i] + x)) };
+                    const Vec16f srcp{ to_float(Vec16i().load_16us(_srcp[i] + x)) };
                     sum = mul_add(srcp, weights[i], sum);
                 }
                 else
                 {
-                    const Vec4f srcp{ Vec4f().load_a(_srcp[i] + x) };
+                    const Vec16f srcp{ Vec16f().load_a(_srcp[i] + x) };
                     sum = mul_add(srcp, weights[i], sum);
                 }
             }
@@ -143,14 +143,14 @@ static void gaussianBlurH(const T* _srcp, float* temp, float* dstp, const float*
 
     for (int y{ 0 }; y < height; ++y)
     {
-        for (int x{ 0 }; x < width; x += 4)
+        for (int x{ 0 }; x < width; x += 16)
         {
             if constexpr (std::is_same_v<T, uint8_t>)
-                to_float(Vec4i().load_4uc(_srcp + x)).store_a(temp + x);
+                to_float(Vec16i().load_16uc(_srcp + x)).store_a(temp + x);
             else if constexpr (std::is_same_v<T, uint16_t>)
-                to_float(Vec4i().load_4us(_srcp + x)).store_a(temp + x);
+                to_float(Vec16i().load_16us(_srcp + x)).store_a(temp + x);
             else
-                Vec4f().load_a(_srcp + x).store_a(temp + x);
+                Vec16f().load_a(_srcp + x).store_a(temp + x);
         }
 
         for (int i{ 1 }; i <= radius; ++i)
@@ -159,13 +159,13 @@ static void gaussianBlurH(const T* _srcp, float* temp, float* dstp, const float*
             temp[width - 1 + i] = temp[width - 1 - i];
         }
 
-        for (int x{ 0 }; x < width; x += 4)
+        for (int x{ 0 }; x < width; x += 16)
         {
-            Vec4f sum{ zero_4f() };
+            Vec16f sum{ zero_16f() };
 
             for (int i{ -radius }; i <= radius; ++i)
             {
-                const Vec4f srcp{ Vec4f().load(temp + x + i) };
+                const Vec16f srcp{ Vec16f().load(temp + x + i) };
                 sum = mul_add(srcp, weights[i], sum);
             }
 
@@ -210,20 +210,20 @@ static void detectEdge(float* blur, float* gradient, int* direction, const int w
             next2[width + 1] = next2[width - 3];
         }
 
-        for (int x{ 0 }; x < width; x += 4)
+        for (int x{ 0 }; x < width; x += 16)
         {
-            Vec4f gx, gy;
+            Vec16f gx, gy;
 
             if (op != FDOG)
             {
-                const Vec4f c1{ Vec4f().load(prev + x - 1) };
-                const Vec4f c2{ Vec4f().load_a(prev + x) };
-                const Vec4f c3{ Vec4f().load(prev + x + 1) };
-                const Vec4f c4{ Vec4f().load(cur + x - 1) };
-                const Vec4f c6{ Vec4f().load(cur + x + 1) };
-                const Vec4f c7{ Vec4f().load(next + x - 1) };
-                const Vec4f c8{ Vec4f().load_a(next + x) };
-                const Vec4f c9{ Vec4f().load(next + x + 1) };
+                const Vec16f c1{ Vec16f().load(prev + x - 1) };
+                const Vec16f c2{ Vec16f().load_a(prev + x) };
+                const Vec16f c3{ Vec16f().load(prev + x + 1) };
+                const Vec16f c4{ Vec16f().load(cur + x - 1) };
+                const Vec16f c6{ Vec16f().load(cur + x + 1) };
+                const Vec16f c7{ Vec16f().load(next + x - 1) };
+                const Vec16f c8{ Vec16f().load_a(next + x) };
+                const Vec16f c9{ Vec16f().load(next + x + 1) };
 
                 switch (op)
                 {
@@ -259,15 +259,15 @@ static void detectEdge(float* blur, float* gradient, int* direction, const int w
                     }
                     case KIRSCH:
                     {
-                        const Vec4f g1{ mul_sub(5.0f, c1 + c2 + c3, 3.0f * (c4 + c6 + c7 + c8 + c9)) };
-                        const Vec4f g2{ mul_sub(5.0f, c1 + c2 + c4, 3.0f * (c3 + c6 + c7 + c8 + c9)) };
-                        const Vec4f g3{ mul_sub(5.0f, c1 + c4 + c7, 3.0f * (c2 + c3 + c6 + c8 + c9)) };
-                        const Vec4f g4{ mul_sub(5.0f, c4 + c7 + c8, 3.0f * (c1 + c2 + c3 + c6 + c9)) };
-                        const Vec4f g5{ mul_sub(5.0f, c7 + c8 + c9, 3.0f * (c1 + c2 + c3 + c4 + c6)) };
-                        const Vec4f g6{ mul_sub(5.0f, c6 + c8 + c9, 3.0f * (c1 + c2 + c3 + c4 + c7)) };
-                        const Vec4f g7{ mul_sub(5.0f, c3 + c6 + c9, 3.0f * (c1 + c2 + c4 + c7 + c8)) };
-                        const Vec4f g8{ mul_sub(5.0f, c2 + c3 + c6, 3.0f * (c1 + c4 + c7 + c8 + c9)) };
-                        const Vec4f g{ max(max(max(abs(g1), abs(g2)), max(abs(g3), abs(g4))), max(max(abs(g5), abs(g6)), max(abs(g7), abs(g8)))) };
+                        const Vec16f g1{ mul_sub(5.0f, c1 + c2 + c3, 3.0f * (c4 + c6 + c7 + c8 + c9)) };
+                        const Vec16f g2{ mul_sub(5.0f, c1 + c2 + c4, 3.0f * (c3 + c6 + c7 + c8 + c9)) };
+                        const Vec16f g3{ mul_sub(5.0f, c1 + c4 + c7, 3.0f * (c2 + c3 + c6 + c8 + c9)) };
+                        const Vec16f g4{ mul_sub(5.0f, c4 + c7 + c8, 3.0f * (c1 + c2 + c3 + c6 + c9)) };
+                        const Vec16f g5{ mul_sub(5.0f, c7 + c8 + c9, 3.0f * (c1 + c2 + c3 + c4 + c6)) };
+                        const Vec16f g6{ mul_sub(5.0f, c6 + c8 + c9, 3.0f * (c1 + c2 + c3 + c4 + c7)) };
+                        const Vec16f g7{ mul_sub(5.0f, c3 + c6 + c9, 3.0f * (c1 + c2 + c4 + c7 + c8)) };
+                        const Vec16f g8{ mul_sub(5.0f, c2 + c3 + c6, 3.0f * (c1 + c4 + c7 + c8 + c9)) };
+                        const Vec16f g{ max(max(max(abs(g1), abs(g2)), max(abs(g3), abs(g4))), max(max(abs(g5), abs(g6)), max(abs(g7), abs(g8)))) };
                         (g * scale).store_nt(gradient + x);
                         break;
                     }
@@ -275,30 +275,30 @@ static void detectEdge(float* blur, float* gradient, int* direction, const int w
             }
             else
             {
-                const Vec4f c1{ Vec4f().load(prev2 + x - 2) };
-                const Vec4f c2{ Vec4f().load(prev2 + x - 1) };
-                const Vec4f c3{ Vec4f().load(prev2 + x) };
-                const Vec4f c4{ Vec4f().load(prev2 + x + 1) };
-                const Vec4f c5{ Vec4f().load(prev2 + x + 2) };
-                const Vec4f c6{ Vec4f().load(prev + x - 2) };
-                const Vec4f c7{ Vec4f().load(prev + x - 1) };
-                const Vec4f c8{ Vec4f().load(prev + x) };
-                const Vec4f c9{ Vec4f().load(prev + x + 1) };
-                const Vec4f c10{ Vec4f().load(prev + x + 2) };
-                const Vec4f c11{ Vec4f().load(cur + x - 2) };
-                const Vec4f c12{ Vec4f().load(cur + x - 1) };
-                const Vec4f c14{ Vec4f().load(cur + x + 1) };
-                const Vec4f c15{ Vec4f().load(cur + x + 2) };
-                const Vec4f c16{ Vec4f().load(next + x - 2) };
-                const Vec4f c17{ Vec4f().load(next + x - 1) };
-                const Vec4f c18{ Vec4f().load(next + x) };
-                const Vec4f c19{ Vec4f().load(next + x + 1) };
-                const Vec4f c20{ Vec4f().load(next + x + 2) };
-                const Vec4f c21{ Vec4f().load(next2 + x - 2) };
-                const Vec4f c22{ Vec4f().load(next2 + x - 1) };
-                const Vec4f c23{ Vec4f().load(next2 + x) };
-                const Vec4f c24{ Vec4f().load(next2 + x + 1) };
-                const Vec4f c25{ Vec4f().load(next2 + x + 2) };
+                const Vec16f c1{ Vec16f().load(prev2 + x - 2) };
+                const Vec16f c2{ Vec16f().load(prev2 + x - 1) };
+                const Vec16f c3{ Vec16f().load(prev2 + x) };
+                const Vec16f c4{ Vec16f().load(prev2 + x + 1) };
+                const Vec16f c5{ Vec16f().load(prev2 + x + 2) };
+                const Vec16f c6{ Vec16f().load(prev + x - 2) };
+                const Vec16f c7{ Vec16f().load(prev + x - 1) };
+                const Vec16f c8{ Vec16f().load(prev + x) };
+                const Vec16f c9{ Vec16f().load(prev + x + 1) };
+                const Vec16f c10{ Vec16f().load(prev + x + 2) };
+                const Vec16f c11{ Vec16f().load(cur + x - 2) };
+                const Vec16f c12{ Vec16f().load(cur + x - 1) };
+                const Vec16f c14{ Vec16f().load(cur + x + 1) };
+                const Vec16f c15{ Vec16f().load(cur + x + 2) };
+                const Vec16f c16{ Vec16f().load(next + x - 2) };
+                const Vec16f c17{ Vec16f().load(next + x - 1) };
+                const Vec16f c18{ Vec16f().load(next + x) };
+                const Vec16f c19{ Vec16f().load(next + x + 1) };
+                const Vec16f c20{ Vec16f().load(next + x + 2) };
+                const Vec16f c21{ Vec16f().load(next2 + x - 2) };
+                const Vec16f c22{ Vec16f().load(next2 + x - 1) };
+                const Vec16f c23{ Vec16f().load(next2 + x) };
+                const Vec16f c24{ Vec16f().load(next2 + x + 1) };
+                const Vec16f c25{ Vec16f().load(next2 + x + 2) };
 
                 gx = c5 + c25 + c4 + c24 + mul_add(2.0f, c10 + c20 + c9 + c19, 3.0f * (c15 + c14))
                     - c2 - c22 - c1 - c21 - mul_add(2.0f, c7 + c17 + c6 + c16, 3.0f * (c12 + c11));
@@ -315,11 +315,11 @@ static void detectEdge(float* blur, float* gradient, int* direction, const int w
 
             if (mode == 0)
             {
-                Vec4f dr{ atan2(gy, gx) };
+                Vec16f dr{ atan2(gy, gx) };
                 dr = if_add(dr < 0.0f, dr, M_PIF);
 
-                const Vec4i bin{ truncatei(mul_add(dr, 4.0f * M_1_PIF, 0.5f)) };
-                select(bin >= 4, zero_si128(), bin).store_nt(direction + x);
+                const Vec16i bin{ truncatei(mul_add(dr, 4.0f * M_1_PIF, 0.5f)) };
+                select(bin >= 4, zero_si512(), bin).store_nt(direction + x);
             }
         }
 
@@ -351,27 +351,27 @@ static void nonMaximumSuppression(const int* _direction, float* _gradient, float
 
     for (int y{ 0 }; y < height; ++y)
     {
-        for (int x{ 0 }; x < width; x += 4)
+        for (int x{ 0 }; x < width; x += 16)
         {
-            const Vec4ui direction{ Vec4ui().load_a(_direction + x) };
+            const Vec16ui direction{ Vec16ui().load_a(_direction + x) };
 
-            Vec4fb mask{ Vec4fb(direction == 0) };
-            Vec4f gradient{ max(Vec4f().load(_gradient + x + 1), Vec4f().load(_gradient + x - 1)) };
-            Vec4f result{ gradient & mask };
+            Vec16fb mask{ Vec16fb(direction == 0) };
+            Vec16f gradient{ max(Vec16f().load(_gradient + x + 1), Vec16f().load(_gradient + x - 1)) };
+            Vec16f result{ gradient & mask };
 
-            mask = Vec4fb(direction == 1);
-            gradient = max(Vec4f().load(_gradient + x - bgStride + 1), Vec4f().load(_gradient + x + bgStride - 1));
+            mask = Vec16fb(direction == 1);
+            gradient = max(Vec16f().load(_gradient + x - bgStride + 1), Vec16f().load(_gradient + x + bgStride - 1));
             result |= gradient & mask;
 
-            mask = Vec4fb(direction == 2);
-            gradient = max(Vec4f().load_a(_gradient + x - bgStride), Vec4f().load_a(_gradient + x + bgStride));
+            mask = Vec16fb(direction == 2);
+            gradient = max(Vec16f().load_a(_gradient + x - bgStride), Vec16f().load_a(_gradient + x + bgStride));
             result |= gradient & mask;
 
-            mask = Vec4fb(direction == 3);
-            gradient = max(Vec4f().load(_gradient + x - bgStride - 1), Vec4f().load(_gradient + x + bgStride + 1));
+            mask = Vec16fb(direction == 3);
+            gradient = max(Vec16f().load(_gradient + x - bgStride - 1), Vec16f().load(_gradient + x + bgStride + 1));
             result |= gradient & mask;
 
-            gradient = Vec4f().load_a(_gradient + x);
+            gradient = Vec16f().load_a(_gradient + x);
             select(gradient >= result, gradient, fltLowest).store_nt(blur + x);
         }
 
@@ -386,24 +386,24 @@ static void binarizeCE(const float* _srcp, T* dstp, const int width, const int h
 {
     for (int y{ 0 }; y < height; ++y)
     {
-        for (int x{ 0 }; x < width; x += 4)
+        for (int x{ 0 }; x < width; x += 16)
         {
-            const Vec4f srcp{ Vec4f().load_a(_srcp + x) };
+            const Vec16f srcp{ Vec16f().load_a(_srcp + x) };
 
             if constexpr (std::is_same_v<T, uint8_t>)
             {
-                const Vec16cb mask{ Vec16cb(compress_saturated(compress_saturated(Vec4ib(srcp == fltMax), zero_si128()), zero_si128())) };
-                select(mask, Vec16uc(255), zero_si128()).store_si32(dstp + x);
+                const Vec16cb mask{ Vec16cb(srcp == fltMax) };
+                select(mask, Vec16uc(255), zero_si128()).store_nt(dstp + x);
             }
             else if constexpr (std::is_same_v<T, uint16_t>)
             {
-                const Vec8sb mask{ Vec8sb(compress_saturated(Vec4ib(srcp == fltMax), zero_si128())) };
-                select(mask, Vec8us(peak), zero_si128()).storel(dstp + x);
+                const Vec16sb mask{ Vec16sb(srcp == fltMax) };
+                select(mask, Vec16us(peak), zero_si256()).store_nt(dstp + x);
             }
             else
             {
-                const Vec4fb mask{ srcp == fltMax };
-                select(mask, Vec4f(1.0f), Vec4f(0.0f)).store_nt(dstp + x);
+                const Vec16fb mask{ srcp == fltMax };
+                select(mask, Vec16f(1.0f), Vec16f(0.0f)).store_nt(dstp + x);
             }
         }
 
@@ -417,19 +417,19 @@ static void discretizeGM(const float* _srcp, T* dstp, const int width, const int
 {
     for (int y{ 0 }; y < height; ++y)
     {
-        for (int x{ 0 }; x < width; x += 4)
+        for (int x{ 0 }; x < width; x += 16)
         {
-            const Vec4f srcp{ Vec4f().load_a(_srcp + x) };
+            const Vec16f srcp{ Vec16f().load_a(_srcp + x) };
 
             if constexpr (std::is_same_v<T, uint8_t>)
             {
-                const Vec16uc result{ compress_saturated_s2u(compress_saturated(truncatei(srcp + 0.5f), zero_si128()), zero_si128()) };
-                result.store_si32(dstp + x);
+                const Vec16uc result{ compress_saturated_s2u(compress_saturated(truncatei(srcp + 0.5f), zero_si512()), zero_si512()).get_low().get_low() };
+                result.store_nt(dstp + x);
             }
             else if constexpr (std::is_same_v<T, uint16_t>)
             {
-                const Vec8us result{ compress_saturated_s2u(truncatei(srcp + 0.5f), zero_si128()) };
-                min(result, peak).storel(dstp + x);
+                const Vec16us result{ compress_saturated_s2u(truncatei(srcp + 0.5f), zero_si512()).get_low() };
+                min(result, peak).store_nt(dstp + x);
             }
             else
                 srcp.store_nt(dstp + x);
@@ -441,7 +441,7 @@ static void discretizeGM(const float* _srcp, T* dstp, const int width, const int
 }
 
 template<typename T>
-void vsTCanny::filter_sse2(PVideoFrame& src, PVideoFrame& dst, IScriptEnvironment* env) noexcept
+void vsTCanny::filter_avx512(PVideoFrame& src, PVideoFrame& dst, IScriptEnvironment* env) noexcept
 {
     const int planes_y[3]{ PLANAR_Y, PLANAR_U, PLANAR_V };
     const int planes_r[3]{ PLANAR_G, PLANAR_B, PLANAR_R };
@@ -494,6 +494,6 @@ void vsTCanny::filter_sse2(PVideoFrame& src, PVideoFrame& dst, IScriptEnvironmen
     }
 }
 
-template void vsTCanny::filter_sse2<uint8_t>(PVideoFrame& src, PVideoFrame& dst, IScriptEnvironment* env) noexcept;
-template void vsTCanny::filter_sse2<uint16_t>(PVideoFrame& src, PVideoFrame& dst, IScriptEnvironment* env) noexcept;
-template void vsTCanny::filter_sse2<float>(PVideoFrame& src, PVideoFrame& dst, IScriptEnvironment* env) noexcept;
+template void vsTCanny::filter_avx512<uint8_t>(PVideoFrame& src, PVideoFrame& dst, IScriptEnvironment* env) noexcept;
+template void vsTCanny::filter_avx512<uint16_t>(PVideoFrame& src, PVideoFrame& dst, IScriptEnvironment* env) noexcept;
+template void vsTCanny::filter_avx512<float>(PVideoFrame& src, PVideoFrame& dst, IScriptEnvironment* env) noexcept;
