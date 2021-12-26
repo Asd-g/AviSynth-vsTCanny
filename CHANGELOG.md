@@ -1,3 +1,6 @@
+##### 1.1.1:
+    Fixed the processing of clips with one plane.
+
 ##### 1.1.0:
     Changed chroma planes range from -0.5..0.5 to 0.0..1.0 (float clips). (VS plugin r13)
     Added AVX512 code. (VS plugin r13)

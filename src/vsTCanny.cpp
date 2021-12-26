@@ -489,12 +489,15 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
         env->ThrowError("vsTCanny: opt=1 requires SSE2.");
 
     const bool rgb{ vi.IsRGB() };
-    const int sw{ vi.GetPlaneWidthSubsampling(PLANAR_U) };
-    const int sh{ vi.GetPlaneHeightSubsampling(PLANAR_U) };
+    int sw;
+    int sh;
     const int planecount{ std::min(vi.NumComponents(), 3) };
 
     if (planecount > 1)
     {
+        sw = vi.GetPlaneWidthSubsampling(PLANAR_U);
+        sh = vi.GetPlaneHeightSubsampling(PLANAR_U);
+
         if (sigmaU == -1354.4f)
             sigmaU = (rgb) ? sigmaY : (sigmaY / (1 << sw));
         if (sigmaV == -1354.4f)
@@ -503,6 +506,11 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
             sigma_vU = (rgb) ? sigma_vY : (sigma_vY / (1 << sh));
         if (sigma_vV == -1354.4f)
             sigma_vV = sigma_vU;
+    }
+    else
+    {
+        sw = 0;
+        sh = 0;
     }
 
     const float sigmaH[3]{ sigmaY, sigmaU, sigmaV };
