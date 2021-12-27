@@ -573,6 +573,11 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
             else
                 radiusV[i] = 0;
         }
+        else
+        {
+            radiusH[i] = 0;
+            radiusV[i] = 0;
+        }
     }
 
     const int comp_size{ vi.ComponentSize() };

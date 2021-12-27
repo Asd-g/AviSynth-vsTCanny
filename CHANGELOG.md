@@ -1,3 +1,6 @@
+##### 1.1.2:
+    Fixed a bug when sigma=0 and the plane is not processed.
+
 ##### 1.1.1:
     Fixed the processing of clips with one plane.
 
