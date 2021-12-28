@@ -1,3 +1,6 @@
+##### 1.1.3:
+    Fixed the uninitialized variables when the clip has only one plane.
+
 ##### 1.1.2:
     Fixed a bug when sigma=0 and the plane is not processed.
 

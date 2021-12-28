@@ -511,6 +511,12 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
     {
         sw = 0;
         sh = 0;
+        radiusH[1] = 0;
+        radiusH[2] = 0;
+        radiusV[1] = 0;
+        radiusV[2] = 0;
+        process[1] = false;
+        process[2] = false;
     }
 
     const float sigmaH[3]{ sigmaY, sigmaU, sigmaV };
@@ -590,6 +596,7 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
     }
     else
     {
+        peak = 0;
         t_h_ /= 255.0f;
         t_l_ /= 255.0f;
     }
@@ -647,20 +654,19 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
 
     radiusAlign = (std::max({ radiusH[0], radiusH[1], radiusH[2], (op == FDOG) ? 2 : 1 }) + vectorSize - 1) & ~(vectorSize - 1);
 
-    PVideoFrame clip{ child->GetFrame(0, env) };
-    const int pitch{ clip->GetPitch() };
+    const int pitch{ child->GetFrame(0, env)->GetPitch() / comp_size };
 
-    blur = reinterpret_cast<float*>(aligned_malloc((pitch / comp_size + radiusAlign * 2) * height * sizeof(float), alignment));
+    blur = reinterpret_cast<float*>(aligned_malloc((pitch + radiusAlign * 2) * height * sizeof(float), alignment));
     if (!blur)
         env->ThrowError("vsTCanny: malloc failure (blur).");
 
-    gradient = reinterpret_cast<float*>(aligned_malloc((pitch / comp_size + radiusAlign * 2) * (height + 2) * sizeof(float), alignment));
+    gradient = reinterpret_cast<float*>(aligned_malloc((pitch + radiusAlign * 2) * (height + 2) * sizeof(float), alignment));
     if (!gradient)
         env->ThrowError("vsTCanny: malloc failure (gradient).");
 
     if (mode_ == 0)
     {
-        direction = reinterpret_cast<int*>(aligned_malloc(pitch / comp_size * height * sizeof(int), alignment));
+        direction = reinterpret_cast<int*>(aligned_malloc(pitch * height * sizeof(int), alignment));
         if (!direction)
             env->ThrowError("vsTCanny: malloc failure (direction).");
 
