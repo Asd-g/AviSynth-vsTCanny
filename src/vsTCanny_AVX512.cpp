@@ -452,7 +452,7 @@ void vsTCanny::filter_avx512(PVideoFrame& src, PVideoFrame& dst, IScriptEnvironm
     {
         const int height{ src->GetHeight(current_planes[i]) };
 
-        if (process[i])
+        if (process[i] == 3)
         {
             const size_t stride{ src->GetPitch(current_planes[i]) / sizeof(T) };
             const size_t bgStride{ stride + radiusAlign * 2 };
@@ -489,7 +489,7 @@ void vsTCanny::filter_avx512(PVideoFrame& src, PVideoFrame& dst, IScriptEnvironm
             else
                 discretizeGM((mode_ == 1) ? gradient : blur, dstp, width, height, bgStride, dst_stride, peak);
         }
-        else
+        else if (process[i] == 2)
             env->BitBlt(dst->GetWritePtr(current_planes[i]), dst->GetPitch(current_planes[i]), src->GetReadPtr(current_planes[i]), src->GetPitch(current_planes[i]), src->GetRowSize(current_planes[i]), height);
     }
 }

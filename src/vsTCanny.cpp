@@ -390,7 +390,7 @@ void vsTCanny::filter_c(PVideoFrame& src, PVideoFrame& dst, IScriptEnvironment* 
     {
         const int height{ src->GetHeight(current_planes[i]) };
 
-        if (process[i])
+        if (process[i] == 3)
         {
             const size_t stride{ src->GetPitch(current_planes[i]) / sizeof(T) };
             const size_t bgStride{ stride + radiusAlign * 2 };
@@ -427,7 +427,7 @@ void vsTCanny::filter_c(PVideoFrame& src, PVideoFrame& dst, IScriptEnvironment* 
             else
                 discretizeGM((mode_ == 1) ? gradient : blur, dstp, width, height, bgStride, dst_stride, peak);
         }
-        else
+        else if (process[i] == 2)
             env->BitBlt(dst->GetWritePtr(current_planes[i]), dst->GetPitch(current_planes[i]), src->GetReadPtr(current_planes[i]), src->GetPitch(current_planes[i]), src->GetRowSize(current_planes[i]), height);
     }
 }
@@ -515,8 +515,8 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
         radiusH[2] = 0;
         radiusV[1] = 0;
         radiusV[2] = 0;
-        process[1] = false;
-        process[2] = false;
+        process[1] = 0;
+        process[2] = 0;
     }
 
     const float sigmaH[3]{ sigmaY, sigmaU, sigmaV };
@@ -531,8 +531,9 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
         {
             switch (planes[i])
             {
-                case 3: process[i] = true; break;
-                case 2: process[i] = false; break;
+                case 3: process[i] = 3; break;
+                case 2: process[i] = 2; break;
+                default: process[i] = 1; break;
             }
         }
 
@@ -549,7 +550,7 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
         if (planes[i] < 1 || planes[i] > 3)
             env->ThrowError("vsTCanny: y, u, v must be between 1..3.");
 
-        if (process[i])
+        if (process[i] == 3)
         {
             if (sigmaH[i])
             {

@@ -30,7 +30,7 @@ class vsTCanny : public GenericVideoFilter
     int mode_;
     float op_;
     float scale;
-    bool process[3];
+    int process[3];
     int radiusH[3];
     int radiusV[3];
     std::unique_ptr<float[]> weightsH[3];

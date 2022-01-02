@@ -1,3 +1,6 @@
+##### 1.1.4:
+    Fixed the behavior when y/u/v=1.
+
 ##### 1.1.3:
     Fixed the uninitialized variables when the clip has only one plane.
 
