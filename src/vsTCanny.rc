@@ -1,8 +1,8 @@
 #include <winver.h>
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION             1,1,4,0
-PRODUCTVERSION        	1,1,4,0
+FILEVERSION             1,1,5,0
+PRODUCTVERSION        	1,1,5,0
 FILEFLAGSMASK           VS_FFI_FILEFLAGSMASK
 FILEFLAGS               0x0L
 FILEOS                  VOS__WINDOWS32
@@ -15,11 +15,11 @@ BEGIN
         BEGIN
         VALUE "Comments",         "Canny edge detection filter."
         VALUE "FileDescription",  "TCanny for AviSynth 2.6 / AviSynth+"
-        VALUE "FileVersion",      "1.1.4"
+        VALUE "FileVersion",      "1.1.5"
         VALUE "InternalName",     "vsTCanny"
         VALUE "OriginalFilename", "vsTCanny.dll"
         VALUE "ProductName",      "vsTCanny"
-        VALUE "ProductVersion",   "1.1.4"
+        VALUE "ProductVersion",   "1.1.5"
         END
     END
     BLOCK "VarFileInfo"

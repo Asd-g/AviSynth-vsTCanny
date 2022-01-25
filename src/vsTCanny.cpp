@@ -360,7 +360,7 @@ static void binarizeCE(const float* srcp, T* __restrict dstp, const int width, c
     }
 }
 
-template<typename T>
+template<typename T, bool clampFP = true>
 static void discretizeGM(const float* srcp, T* __restrict dstp, const int width, const int height, const int srcStride, const int dstStride, const int peak) noexcept
 {
     for (int y{ 0 }; y < height; ++y)
@@ -369,6 +369,8 @@ static void discretizeGM(const float* srcp, T* __restrict dstp, const int width,
         {
             if constexpr (std::is_integral_v<T>)
                 dstp[x] = static_cast<T>(std::min(static_cast<int>(srcp[x] + 0.5f), peak));
+            else if constexpr (clampFP)
+                dstp[x] = std::clamp(srcp[x], 0.0f, 1.0f);
             else
                 dstp[x] = srcp[x];
         }
@@ -422,10 +424,12 @@ void vsTCanny::filter_c(PVideoFrame& src, PVideoFrame& dst, IScriptEnvironment* 
                 }
             }
 
-            if (mode_ == 0)
-                binarizeCE(blur, dstp, width, height, bgStride, dst_stride, peak);
-            else
-                discretizeGM((mode_ == 1) ? gradient : blur, dstp, width, height, bgStride, dst_stride, peak);
+            switch (mode_)
+            {
+                case 0: binarizeCE(blur, dstp, width, height, bgStride, dst_stride, peak); break;
+                case 1: discretizeGM(gradient, dstp, width, height, bgStride, stride, peak); break;
+                default: discretizeGM<T, false>(blur, dstp, width, height, bgStride, dst_stride, peak); break;
+            }
         }
         else if (process[i] == 2)
             env->BitBlt(dst->GetWritePtr(current_planes[i]), dst->GetPitch(current_planes[i]), src->GetReadPtr(current_planes[i]), src->GetPitch(current_planes[i]), src->GetRowSize(current_planes[i]), height);
@@ -526,7 +530,7 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
     for (int i{ 0 }; i < planecount; ++i)
     {
         if (rgb)
-            process[i] = true;
+            process[i] = 3;
         else
         {
             switch (planes[i])

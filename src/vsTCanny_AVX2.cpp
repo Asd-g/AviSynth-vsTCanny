@@ -412,7 +412,7 @@ static void binarizeCE(const float* _srcp, T* dstp, const int width, const int h
     }
 }
 
-template<typename T>
+template<typename T, bool clampFP = true>
 static void discretizeGM(const float* _srcp, T* dstp, const int width, const int height, const int srcStride, const int dstStride, const int peak) noexcept
 {
     for (int y{ 0 }; y < height; ++y)
@@ -431,6 +431,8 @@ static void discretizeGM(const float* _srcp, T* dstp, const int width, const int
                 const Vec8us result{ compress_saturated_s2u(truncatei(srcp + 0.5f), zero_si256()).get_low() };
                 min(result, peak).store_nt(dstp + x);
             }
+            else if constexpr (clampFP)
+                min(max(srcp, 0.0f), 1.0f).store_nt(dstp + x);
             else
                 srcp.store_nt(dstp + x);
         }
@@ -484,10 +486,12 @@ void vsTCanny::filter_avx2(PVideoFrame& src, PVideoFrame& dst, IScriptEnvironmen
                 }
             }
 
-            if (mode_ == 0)
-                binarizeCE(blur, dstp, width, height, bgStride, dst_stride, peak);
-            else
-                discretizeGM((mode_ == 1) ? gradient : blur, dstp, width, height, bgStride, dst_stride, peak);
+            switch (mode_)
+            {
+                case 0: binarizeCE(blur, dstp, width, height, bgStride, dst_stride, peak); break;
+                case 1: discretizeGM(gradient, dstp, width, height, bgStride, stride, peak); break;
+                default: discretizeGM<T, false>(blur, dstp, width, height, bgStride, dst_stride, peak); break;
+            }
         }
         else if (process[i] == 2)
             env->BitBlt(dst->GetWritePtr(current_planes[i]), dst->GetPitch(current_planes[i]), src->GetReadPtr(current_planes[i]), src->GetPitch(current_planes[i]), src->GetRowSize(current_planes[i]), height);
