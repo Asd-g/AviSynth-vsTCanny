@@ -52,7 +52,7 @@ vsTCanny (clip, float "sigmaY", float "sigmaU", float "sigmaV", float sigma_vY",
 - op\
     Sets the operator for edge detection.\
     0: The operator used in tritical's original filter.\
-    1:  the Prewitt operator whose use is proposed by P. Zhou et al. [1]
+    1: The Prewitt operator whose use is proposed by P. Zhou et al. [1]\
     2: The Sobel operator.\
     3: The Scharr operator.\
     4: The Kroon operator.\

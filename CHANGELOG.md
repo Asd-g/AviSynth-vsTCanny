@@ -1,6 +1,6 @@
 ##### 1.1.5:
     Fixed the processing of planes for RGB formats.
-    Properly clamped float mask to 0-1 range in mode=1. (VS plugin r14) 
+    Properly clamped float mask to 0-1 range in mode=1. (VS plugin r14)
 
 ##### 1.1.4:
     Fixed the behavior when y/u/v=1.
