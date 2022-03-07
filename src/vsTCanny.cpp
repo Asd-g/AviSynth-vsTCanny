@@ -499,15 +499,15 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
 
     if (planecount > 1)
     {
-        sw = vi.GetPlaneWidthSubsampling(PLANAR_U);
-        sh = vi.GetPlaneHeightSubsampling(PLANAR_U);
+        sw = vi.GetPlaneWidthSubsampling((rgb) ? PLANAR_R : PLANAR_U);
+        sh = vi.GetPlaneHeightSubsampling((rgb) ? PLANAR_R : PLANAR_U);
 
         if (sigmaU == -1354.4f)
             sigmaU = (rgb) ? sigmaY : (sigmaY / (1 << sw));
         if (sigmaV == -1354.4f)
             sigmaV = sigmaU;
         if (sigma_vU == -1354.4f)
-            sigma_vU = (rgb) ? sigma_vY : (sigma_vY / (1 << sh));
+            sigma_vU = (sw == sh) ? sigmaU : (sigmaU * (1 << sw));
         if (sigma_vV == -1354.4f)
             sigma_vV = sigma_vU;
     }

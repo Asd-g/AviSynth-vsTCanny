@@ -25,13 +25,19 @@ vsTCanny (clip, float "sigmaY", float "sigmaU", float "sigmaV", float sigma_vY",
     Standard deviation of horizontal gaussian blur.\
     Must be positive value.\
     Setting to 0 disables gaussian blur.\
-    Default: sigmaY = 1.5; sigmaU = sigmaV = sigmaY/2 for half resolution chroma and sigmaU = sigmaV = sigmaY for full resolution chroma.
+    Default:
+    - sigmaY = 1.5
+    - sigmaU = sigmaY / horizontal_chroma_subsampling_factor
+    - sigmaV = sigmaU
 
 - sigma_vY, sigma_vU, sigma_vV\
     Standard deviation of vertical gaussian blur.\
     Must be positive value.\
     Setting to 0 disables gaussian blur.\
-    Default: sigma_vY = sigmaY; sigma_vU = sigma_vV = sigma_vY/2 for half resolution chroma and sigma_vU = sigma_vV = sigma_vY for full resolution chroma.
+    Default:
+    - sigma_vY = sigmaY
+    - sigma_vU = sigmaU if horizontal_chroma_subsampling_factor_and_vertical_chroma_subsampling_factor_equal else sigmaU * horizontal_chroma_subsampling_factor
+    - sigma_vV = sigma_vU
 
 - t_h\
     High gradient magnitude threshold for hysteresis.\

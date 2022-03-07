@@ -1,3 +1,7 @@
+##### 1.1.6:
+    Fixed default sigma_U/V/vU/vV for RGB formats.
+    Changed default sigma_vU/vV. Now they are inherited from sigmaU/V.
+
 ##### 1.1.5:
     Fixed the processing of planes for RGB formats.
     Properly clamped float mask to 0-1 range in mode=1. (VS plugin r14)
