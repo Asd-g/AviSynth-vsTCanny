@@ -36,7 +36,8 @@ vsTCanny (clip, float "sigmaY", float "sigmaU", float "sigmaV", float sigma_vY",
     Setting to 0 disables gaussian blur.\
     Default:
     - sigma_vY = sigmaY
-    - sigma_vU = sigmaU if horizontal_chroma_subsampling_factor_and_vertical_chroma_subsampling_factor_equal else sigmaU * horizontal_chroma_subsampling_factor
+    - if sigma_vY not defined: if horizontal and vertical subsampling factors are equal `sigma_vU = sigmaU` else `sigma_vU = sigmaU * horizontal_chroma_subsampling_factor`
+    - if sigma_vY defined: sigma_vU = sigma_vY / vertical_chroma_subsampling_factor
     - sigma_vV = sigma_vU
 
 - t_h\

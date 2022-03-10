@@ -506,8 +506,18 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
             sigmaU = (rgb) ? sigmaY : (sigmaY / (1 << sw));
         if (sigmaV == -1354.4f)
             sigmaV = sigmaU;
-        if (sigma_vU == -1354.4f)
-            sigma_vU = (sw == sh) ? sigmaU : (sigmaU * (1 << sw));
+        if (sigma_vY == -1354.4f)
+        {
+            sigma_vY = sigmaY;
+
+            if (sigma_vU == -1354.4f)
+                sigma_vU = (sw == sh) ? sigmaU : (sigmaU * (1 << sw));
+        }
+        else
+        {
+            if (sigma_vU == -1354.4f)
+                sigma_vU = (rgb) ? sigma_vY : (sigma_vY / (1 << sh));
+        }        
         if (sigma_vV == -1354.4f)
             sigma_vV = sigma_vU;
     }
@@ -718,8 +728,8 @@ AVSValue __cdecl Create_vsTCanny(AVSValue args, void* user_data, IScriptEnvironm
     if (sigmaV < 0.0f && sigmaV != -1354.4f)
         env->ThrowError("vsTCanny: sigmaV must be greater than or equal to 0.0.");
 
-    const float sigma_vY{ args[4].AsFloatf(sigmaY) };
-    if (sigma_vY < 0.0f)
+    const float sigma_vY{ args[4].AsFloatf(-1354.4f) };
+    if (sigma_vY < 0.0f && sigma_vY != -1354.4f)
         env->ThrowError("vsTCanny: sigma_vY must be greater than or equal to 0.0.");
 
     const float sigma_vU{ args[5].AsFloatf(-1354.4f) };

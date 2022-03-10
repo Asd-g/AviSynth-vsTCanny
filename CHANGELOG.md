@@ -1,3 +1,6 @@
+##### 1.1.7:
+    Changed the behavior of default sigma_vU.
+
 ##### 1.1.6:
     Fixed default sigma_U/V/vU/vV for RGB formats.
     Changed default sigma_vU/vV. Now they are inherited from sigmaU/V.
