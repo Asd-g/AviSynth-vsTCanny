@@ -1,3 +1,6 @@
+##### 1.1.8:
+    Fixed default sigma_vY when the clip has only one plane. (regression from 1.1.7)
+
 ##### 1.1.7:
     Changed the behavior of default sigma_vU.
 

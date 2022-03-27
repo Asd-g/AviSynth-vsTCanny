@@ -80,6 +80,10 @@
   <PropertyGroup Label="LLVM" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClangClAdditionalOptions>
     </ClangClAdditionalOptions>
+    <UseLldLink>true</UseLldLink>
+  </PropertyGroup>
+  <PropertyGroup Label="LLVM" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <UseLldLink>true</UseLldLink>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

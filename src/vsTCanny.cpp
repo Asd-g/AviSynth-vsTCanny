@@ -458,7 +458,7 @@ static float* gaussianWeights(const float sigma, int& radius) noexcept
 }
 
 vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float sigma_vY, float sigma_vU, float sigma_vV, float t_h, float t_l, int mode, int op, float scale_, int y, int u, int v, int opt, IScriptEnvironment* env)
-    : GenericVideoFilter(_child), t_h_(t_h), t_l_(t_l), mode_(mode), op_(op), scale(scale_)
+    : GenericVideoFilter(_child), t_h_(t_h), t_l_(t_l), mode_(mode), op_(op), scale(scale_), process{ 0, 0, 0 }, radiusH{ 0, 0, 0 }, radiusV{ 0, 0, 0 }
 {
     if (!vi.IsPlanar())
         env->ThrowError("vsTCanny: the clip is not in planar format.");
@@ -493,8 +493,8 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
         env->ThrowError("vsTCanny: opt=1 requires SSE2.");
 
     const bool rgb{ vi.IsRGB() };
-    int sw;
-    int sh;
+    int sw{ 0 };
+    int sh{ 0 };
     const int planecount{ std::min(vi.NumComponents(), 3) };
 
     if (planecount > 1)
@@ -517,20 +517,14 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
         {
             if (sigma_vU == -1354.4f)
                 sigma_vU = (rgb) ? sigma_vY : (sigma_vY / (1 << sh));
-        }        
+        }
         if (sigma_vV == -1354.4f)
             sigma_vV = sigma_vU;
     }
     else
     {
-        sw = 0;
-        sh = 0;
-        radiusH[1] = 0;
-        radiusH[2] = 0;
-        radiusV[1] = 0;
-        radiusV[2] = 0;
-        process[1] = 0;
-        process[2] = 0;
+        if (sigma_vY == -1354.4f)
+            sigma_vY = sigmaY;
     }
 
     const float sigmaH[3]{ sigmaY, sigmaU, sigmaV };
