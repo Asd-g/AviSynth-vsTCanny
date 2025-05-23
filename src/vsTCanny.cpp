@@ -486,7 +486,7 @@ vsTCanny::vsTCanny(PClip _child, float sigmaY, float sigmaU, float sigmaV, float
     const bool sse2{ !!(env->GetCPUFlags() & CPUF_SSE2) };
 
     if (!avx512 && opt == 3)
-        env->ThrowError("vsTCanny: opt=2 requires AVX512.");
+        env->ThrowError("vsTCanny: opt=3 requires AVX512.");
     if (!avx2 && opt == 2)
         env->ThrowError("vsTCanny: opt=2 requires AVX2.");
     if (!sse2 && opt == 1)
